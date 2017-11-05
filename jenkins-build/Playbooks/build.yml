@@ -1,0 +1,57 @@
+---
+- hosts: "{{ myprojectEnv }}"
+
+  vars:
+ # define your variables here
+   date: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}" 
+   artifact_Folder: "{{ env_home_dir }}/{{ myproject_env }}/{{ artifactory_directory }}/{{ myprojectSystemName }}/{{ myprojectProjectName }}"
+   myprojectApp_jar: "myprojectApp-{{ artifactVersion }}"
+   myprojectApp_jar_with_dependencies: "myprojectApp-{{ artifactVersion }}-jar-with-dependencies"  
+
+  
+  tasks:
+
+   - name: Check if project folder exist in the artifact directory
+     stat: path="{{ artifact_Folder }}"
+     register: artifactFolder 
+     tags: 
+       - deploy 
+
+   - name: Create a project folder in artifact directory 
+     file: path="{{ artifact_Folder }}" state=directory
+     when:
+       - artifactFolder.stat.exists == False	 
+     tags: 
+       - deploy	
+  
+   - name: Check if version folder is present
+     stat: path="{{ artifact_Folder }}/{{ artifactVersion }}"
+     register: versionFolder 
+     tags: 
+       - deploy 
+
+   - name: Create a version folder in artifact directory 
+     file: path="{{ artifact_Folder }}/{{ artifactVersion }}" state=directory
+     when:
+       - versionFolder.stat.exists == False	 
+     tags: 
+       - deploy	    
+      
+   - name: download myprojectApp jar from artifactory to artifact directory
+     get_url:
+       url: "{{ artifactoryUrl }}/maven-release/com/mycomany/myproject/myprojectApp/{{ artifactVersion }}/{{ myprojectApp_jar }}.jar"   
+       dest: "{{ artifact_Folder }}/{{ artifactVersion }}"
+       validate_certs: no  
+     tags: 
+       - deploy  
+
+   - name: download myprojectApp jar with dependencies from artifactory to artifact directory 
+     get_url:
+       url: "{{ artifactoryUrl }}/maven-release/com/mycomany/myproject/myprojectApp/{{ artifactVersion }}/{{ myprojectApp_jar_with_dependencies }}.jar"   
+       dest: "{{ artifact_Folder }}/{{ artifactVersion }}"
+       validate_certs: no  
+     tags: 
+       - deploy
+
+
+  

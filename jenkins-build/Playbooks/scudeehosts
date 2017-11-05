@@ -1,0 +1,33 @@
+# myproject Dev environment
+[dev]
+10.10.10.10
+
+# myproject Sit environment
+[sit]
+10.10.20.10
+
+# Artifactory server
+
+[dev:vars]
+#setting the variables for dev hosts
+artifactoryUrl="https://localhost:8081/artifactory"
+env_home_dir="/home/myproject"
+myproject_env="DEV"
+artifactory_directory="ARTIFACTS"
+
+#setting the variables for deployment 
+deployment_home="/home/myproject"
+spark_deployment_dir="spark-process-layer"
+
+
+
+[sit:vars]
+#setting the variables for dev hosts
+artifactoryUrl="https://localhost:8081/artifactory"
+env_home_dir="/home/myproject"
+myproject_env="DEV"
+artifactory_directory="ARTIFACTS"
+
+#setting the variables for deployment 
+deployment_home="/home/myproject"
+spark_deployment_dir="spark-process-layer"

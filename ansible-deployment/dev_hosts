@@ -1,0 +1,11 @@
+# myproject Dev environment
+[dev]
+10.10.10.10 ansible_connection=ssh ansible_ssh_user=username ansible_ssh_pass=credentialsId ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+# myproject Sit environment
+[sit]
+10.10.10.10
+
+# Artifactory server
+
+

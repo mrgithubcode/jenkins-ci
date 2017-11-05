@@ -1,0 +1,33 @@
+---
+- hosts: "{{ myprojectEnv }}"
+
+  vars:
+ # define your variables here
+   date: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}" 
+   artifact_Folder: "{{ env_home_dir }}/{{ myproject_env }}/{{ artifactory_directory }}/{{ myprojectSystemName }}/{{ myprojectProjectName }}"
+   myprojectApp_jar: "myprojectApp-{{ artifactVersion }}"
+   myprojectApp_jar_with_dependencies: "myprojectApp-{{ artifactVersion }}-jar-with-dependencies"
+   
+
+   system_deployment_dir: "gpst1"
+   deployment_dir: "{{ deployment_home }}/{{ myproject_env }}/{{ system_deployment_dir }}/{{ myprojectApp_deployment_dir }}"
+   
+  tasks:
+
+   - name: Check if backup version folder is present
+     stat: path="{{ artifact_Folder }}/{{ artifactVersion }}"
+     register: archiveFolder 
+     tags: 
+       - deployment    
+
+
+   - name: copy jars from artifact directory to deployment location
+     copy: remote_src=True src={{ item.src }} dest={{ item.dest }}
+     with_items:
+       - { src: "{{ artifact_Folder }}/{{ artifactVersion }}/{{ myprojectApp_jar }}.jar", dest: "{{ deployment_dir }}/{{ myprojectApp_jar }}.jar" }
+       - { src: "{{ artifact_Folder }}/{{ artifactVersion }}/{{ myprojectApp_jar_with_dependencies }}.jar", dest: "{{ deployment_dir }}/{{ myprojectApp_jar_with_dependencies }}.jar" }
+       
+     tags: 
+       - deployment 
+      
+   

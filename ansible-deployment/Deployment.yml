@@ -1,0 +1,40 @@
+generic:
+  enabled: true
+  script: "demo"
+  
+
+## setting the artifactory variables and values
+artifactory:
+  artifactoryUrl: "http://localhost:8081/artifactory"
+##artifactory details for common artifacts
+  generic_repo : "generic-release_local"
+  myproject_dir : "generic-myproject"
+  deployment_dir: "deployment"
+  maven_repo : "maven-release"
+
+deployment:
+  deployment_Package : "myproject_deployment"
+  spark_deployment : false
+  spark_deployment : true
+
+
+
+##to be changed only when there is a change in the jar name by the development team
+## spark jars
+spark:
+  spark_main_jar : "spark-process-layer"    
+  group_id : "org/mycompany/test"  
+  artifactory_repo : "maven-release"
+  file_type : "pom"  
+
+env:
+  myproject_env : "DEV"
+  myprojectSystemName : "GPS"  
+  env_home_dir : "/HOME/myproject"
+  artifactory_directory : "ARTIFACTS"  
+
+
+deployment_scripts:
+  deploymentPackageName : "DEPLOY.zip"  
+  ## configurable settings for every deployment
+  is_deployment_package_deployment : "yes"  

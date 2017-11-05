@@ -1,0 +1,63 @@
+---
+- hosts: "{{ myprojectEnv }}"
+
+  vars:
+ # define your variables here
+   date: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}" 
+   deployment_directory: "{{ env_home_dir }}/{{ myproject_env }}/{{ ansible_test_dir }}/{{ deployment_dir }}"
+   #deployment_directory: "{{ env_home_dir }}/{{ myproject_env }}/{{ ansible_test_dir }}/{{ deployment_dir }}"
+   deployment_artifacts_dir: "{{ deployment_directory }}/artifacts"
+   deployment_scripts_dir: "{{ deployment_directory }}/{{ dep_package_name }}"
+      
+
+   
+  tasks:
+
+   - name: Check if deployment directory exist
+     stat: path="{{ deployment_directory }}"
+     register: deploymentFolder 
+     tags: 
+       - env_setup 
+
+   - name: Create deployment directory 
+     file: path="{{ deployment_directory }}" state=directory
+     when:
+       - deploymentFolder.stat.exists == False	 
+     tags: 
+       - env_setup
+
+   - name: Check if artifact directory exist in the deployment directory
+     stat: path="{{ deployment_artifacts_dir }}"
+     register: artifactFolder 
+     tags: 
+       - env_setup 
+
+   - name: Create a artifact directory in deployment directory 
+     file: path="{{ deployment_artifacts_dir }}" state=directory
+     when:
+       - artifactFolder.stat.exists == False	 
+     tags: 
+       - env_setup
+
+   - name: download deployment package zip from artifactory to artifacts directory
+     get_url:
+       url: "{{ artifactoryUrl }}/{{ genericReleaseDir }}/{{ myprojectDir }}/{{ deploymentDirName }}/{{ myprojectSystemName }}/{{ deploymentPackageName }}"   
+       dest: "{{ deployment_artifacts_dir }}"
+       validate_certs: no
+     when:
+       - is_deployment_package_deployment == "yes"    
+     tags: 
+       - artifact_download  
+     with_items: "{{ is_deployment_package_deployment }}" 
+
+   - name: download Spark main jar from artifactory to artifacts directory
+     get_url:
+       url: "{{ artifactoryUrl }}/maven-release/org/mycompany/project/spark-process-layer/{{ spark_jar_version }}/{{ spark_main_jar }}"   
+       dest: "{{ deployment_artifacts_dir }}"
+       validate_certs: no
+     when:
+       - is_spark_main_jar_deployment == "yes"    
+     tags: 
+       - artifact_download  
+     with_items: "{{ is_spark_main_jar_deployment }}" 
+

@@ -1,0 +1,77 @@
+---
+- hosts: dev
+
+  vars:
+ # define your variables here
+   date: "{{ lookup('pipe', 'date +%Y%m%d-%H%M') }}" 
+   deployment_directory: "{{ env_home_dir }}/{{ myproject_env }}/{{ ansible_test_dir }}/{{ deployment_dir }}"
+   #deployment_directory: "{{ env_home_dir }}/{{ myproject_env }}/{{ ansible_test_dir }}/{{ deployment_dir }}"
+   deployment_artifacts_dir: "{{ deployment_directory }}/artifacts"
+   deployment_scripts_dir: "{{ deployment_directory }}/{{ dep_package_name }}"
+      
+
+   
+  tasks:
+
+   - name: Check if deployment directory exist
+     stat: path="{{ deployment_directory }}"
+     register: deploymentFolder 
+     tags: 
+       - env_setup 
+
+   - name: Create deployment directory 
+     file: path="{{ deployment_directory }}" state=directory
+     when:
+       - deploymentFolder.stat.exists == False	 
+     tags: 
+       - env_setup
+
+   - name: Check if artifact directory exist in the deployment directory
+     stat: path="{{ deployment_artifacts_dir }}"
+     register: artifactFolder 
+     tags: 
+       - env_setup 
+
+   - name: Create a artifact directory in deployment directory 
+     file: path="{{ deployment_artifacts_dir }}" state=directory
+     when:
+       - artifactFolder.stat.exists == False	 
+     tags: 
+       - env_setup
+
+   - name: Extract deployment package 
+     unarchive: 
+       src: "{{ deployment_directory }}/{{ dep_package_name }}.{{ zip_format_ext }}"
+       dest: "{{ deployment_directory }}"
+     tags: 
+       - deployment
+
+   - name: Permissions Grant to shell for execution
+     file: path="{{ deployment_scripts_dir }}/{{ item }}" state=touch mode=0777   
+     with_items:
+       - deploy_run.sh
+       - spark_completeRun.sh
+       - execute_hive.sh
+     tags: 
+       - deployment
+
+   - name: call deploy_common_complete_run script
+     shell: ./deploy_run.sh 
+     args:
+       chdir: "{{ deployment_scripts_dir }}"         
+     tags: 
+       - deployment       
+
+   - name: call metaApp_completeRun script
+     shell: ./spark_completeRun.sh 
+     args:
+       chdir: "{{ deployment_scripts_dir }}"
+     tags: 
+       - deployment       
+
+   - name: call execute_hive script
+     shell: ./execute_hive.sh 
+     args:
+       chdir: "{{ deployment_scripts_dir }}"       
+     tags: 
+       - deployment       

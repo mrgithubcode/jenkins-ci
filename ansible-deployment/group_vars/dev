@@ -1,0 +1,40 @@
+---
+## setting the variables for dev hosts
+artifactoryUrl : "http://localhost:8081/artifactory/"
+env_home_dir : "/HOME"
+mycompany_env : "DEV"
+artifactory_directory : "ARTIFACTS"
+mycompanySystemName : "SYSTEMNAME"
+
+##setting the variables for deployment 
+deployment_home : "/HOME/DIR"
+spark_deployment_dir : "spark-process-layer"
+
+
+##deployment variables
+ansible_test_dir : "devops/ansible"
+deployment_dir : "deployment_dir"
+dep_package_name : "deployment_package"
+zip_format_ext : "zip"
+
+
+##artifactory details for common artifacts
+genericReleaseDir : "generic-release_local"
+mycompanyDir : "generic-mycompany"
+deploymentPackageName : "DEPLOY_COMMON.zip"
+deploymentDirName: "deployment"
+
+## configurable settings for every deployment
+is_deployment_package_deployment : "yes"
+
+
+spark_jar_version : "0.0.5"
+is_spark_deployment : "no"
+is_spark_main_jar_deployment : "no"
+is_spark_jar_with_dependencies_deployment : "no"
+
+
+##to be changed only when there is a change in the jar name by the development team
+## spark jars
+spark_main_jar : "spark-process-layer-{{ spark_jar_version }}.jar"
+spark_jar_with_dependencies : "spark-process-layer-{{ spark_jar_version }}-jar-with-dependencies.jar"

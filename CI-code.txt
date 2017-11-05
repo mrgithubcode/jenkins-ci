@@ -1,0 +1,108 @@
+
+
+	def artifactoryServer = Artifactory.newServer()
+    def mavenBuildInfo = Artifactory.newBuildInfo()
+    def mavenBuild = Artifactory.newMavenBuild()
+
+stage ('Artifactory configuration') {	
+	
+	//def server = Artifactory.newServer url: 'artifactory-url', credentialsId: 'ccrreeddeennttiiaall'
+	artifactoryServer.url = ""
+	artifactoryServer.bypassProxy = true
+	// If you're using username and password:
+	//artifactoryServer.username = 'new-user-name'
+	artifactoryServer.password = 'new-password'
+	// If you're using Credentials ID:
+	//artifactoryServer.credentialsId = 'creeddeennttiiaall'
+
+
+	mavenBuild.tool = CONTAINER_MAVEN_TOOL // Tool name from Jenkins configuration
+    mavenBuild.deployer releaseRepo: 'libs-release-local', snapshotRepo:'libs-snapshot-local', server: server
+    mavenBuild.resolver releaseRepo: 'libs-release', snapshotRepo:'libs-snapshot', server: server
+
+	//mavenBuild.deployer.artifactDeploymentPatterns.addInclude("frog*")
+	//mavenBuild.deployer.artifactDeploymentPatterns.addExclude("*.zip")
+	//mavenBuild.deployer.artifactDeploymentPatterns.addInclude("frog*").addExclude("*.zip")
+	
+	rtMaven.deployer.deployArtifacts = false
+	
+}
+
+stage ('Generic artifactory push')
+{
+	
+	def buildInfo1 = server.download(downloadSpec)
+	def buildInfo2 = server.upload(uploadSpec)
+	//buildInfo1.append(buildInfo2)
+	//buildInfo1.env.capture = true
+	//buildInfo.env.filter.addInclude("*a*")
+	//buildInfo.env.filter.addExclude("DONT_COLLECT*")
+	//value = buildInfo.env.vars['env-var-name']
+	artifactoryServer.publishBuildInfo(buildInfo1)
+	artifactoryServer.publishBuildInfo(buildInfo2)
+}
+
+
+stage ('Exec Maven') {
+        docker.image('maven').inside {
+            withEnv(['JAVA_HOME=/docker-java-home']) { // Java home of the container
+			//withEnv(['JAVA_HOME=/docker-java-home', 'MAVEN_HOME=/usr/share/maven']) {
+                rtMaven.run pom: 'maven-example/pom.xml', goals: 'clean test', buildInfo: mavenBuildInfo
+				//rtMaven.run pom: 'maven-example/pom.xml', goals: 'clean install', buildInfo: mavenBuildInfo
+            }
+        }
+    }
+
+stage ('Deploy Artifacts')
+	{	
+	rtMaven.deployer.deployArtifacts mavenBuildInfo
+	}
+
+stage ('Publish build info') {
+        artifactoryServer.publishBuildInfo(mavenBuildInfo)
+    }
+
+	
+stage ('Promotion') {
+        // Promote build
+		server.promote promotionConfig
+		//Artifactory.addInteractivePromotion server: server, promotionConfig: promotionConfig, displayName: "Promote me please"
+    }	
+	
+	
+	
+	
+def downloadSpec = """{
+ "files": [
+  {
+      "pattern": "bazinga-repo/*.zip",
+      "target": "bazinga/"
+    }
+ ]
+}"""
+
+def uploadSpec = """{
+  "files": [
+    {
+      "pattern": "bazinga/*froggy*.zip",
+      "target": "bazinga-repo/froggy-files/"
+    }
+ ]
+}"""	
+	
+def promotionConfig = [
+    // Mandatory parameters
+    'buildName'          : buildInfo.name,
+    'buildNumber'        : buildInfo.number,
+    'targetRepo'         : 'libs-release-local',
+ 
+    // Optional parameters
+    'comment'            : 'this is the promotion comment',
+    'sourceRepo'         : 'libs-snapshot-local',
+    'status'             : 'Released',
+    'includeDependencies': true,
+    'copy'               : true,
+    // 'failFast' is true by default.
+    // Set it to false, if you don't want the promotion to abort upon receiving the first error.
+    'failFast'           : true
+]

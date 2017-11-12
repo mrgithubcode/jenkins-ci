@@ -1,0 +1,109 @@
+https://stackoverflow.com/questions/37831386/jenkins-pipeline-input-step-blocks-executor
+
+
+node {
+
+        stage ('Speak') {
+            script { 
+                      if (params.MQ == 'YES') {
+                            echo 'Deployment of MQ'
+                      } else {
+                            echo 'Skipped'
+                      }	
+                }
+        }
+    
+}
+
+
+node {
+		if(true)
+		{
+        stage ('Speak') {
+				echo 'executed'
+			}
+			}
+		
+		
+		if(false)
+		{
+        stage ('Dont Speak') {
+				echo 'not executed'
+			}
+		}
+    
+}
+
+
+
+// this will ask user input to proceed or abort
+
+node() {
+  stage ('Build to Stage') {
+    echo 'stage build'
+  }
+
+  stage ('Promotion') {
+    timeout(time: 1, unit: 'HOURS') {
+      input 'Deploy to Production?'
+    }
+  }
+
+  stage ('Deploy to Production') {
+    echo 'prod build'
+  }
+}
+
+===========================
+
+Move input Step to Flyweight Executor
+
+Another option is to not allocate a heavyweight executor for the input step. You can do this by using the input step outside of the node block, like this:
+
+stage 'Build to Stage' {
+  node {
+      sh "echo building"
+      stash 'complete-workspace'
+  }
+}
+
+stage 'Promotion' {
+  input 'Deploy to Production?'
+}
+
+stage 'Deploy to Production' {
+  node {
+    unstash 'complete-workspace'
+    sh "echo deploying"
+  }
+}
+
+==============================
+
+
+node {
+        def deployOptions = 'no\nyes'
+        def userInput = input(
+          id: 'userInput', message: 'Are you prepared to deploy?',
+		  parameters: [
+          [$class: 'ChoiceParameterDefinition', choices: deployOptions, description: 'Approve/Disallow deployment', name: 'deploy-check']
+          ]
+        )
+        echo "you selected: ${userInput}"
+    }
+
+
+===========================
+	
+stage 'promotion'
+def userInput = input(
+ id: 'userInput', message: 'Let\'s promote?', parameters: [
+ [$class: 'TextParameterDefinition', defaultValue: 'uat', description: 'Environment', name: 'env'],
+ [$class: 'TextParameterDefinition', defaultValue: 'uat1', description: 'Target', name: 'target']
+])
+echo ("Env: "+userInput['env'])
+echo ("Target: "+userInput['target'])	
+
+=====================
+
+
